@@ -187,7 +187,7 @@ function block_execution() {
             text-align: center;
         }
         .lock {
-            font-size: 10rem;
+            font-size: 17rem;
             margin-bottom: 20px;
         }
         .message {
@@ -210,7 +210,7 @@ function block_execution() {
 <body>
     <div class="lock-container">
         <div class="lock">🔒</div>
-        <div class="message">Access Denied</div>
+        <div class="message">Acceso denegado</div>
         <div class="contact">
             Si cree que esto es un error, comuníquese con el administrador en
             <a href="#" onclick="this.href=\'mailto:\'+atob(\'aW5mb0Bqb2NhcnNhLmNvbQ==\')">
