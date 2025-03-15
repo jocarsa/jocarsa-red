@@ -29,6 +29,12 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS users (
     email TEXT
 )");
 
+// Create the whitelist table if not exists.
+$pdo->exec("CREATE TABLE IF NOT EXISTS whitelist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip TEXT UNIQUE
+)");
+
 // Insert default user if no users exist.
 $stmt = $pdo->query("SELECT COUNT(*) FROM users");
 if ($stmt->fetchColumn() == 0) {
@@ -159,6 +165,23 @@ if (isset($_GET['action'])) {
         header("Location: ?page=users");
         exit;
     }
+    if ($action === 'add_whitelist' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $ip = trim($_POST['ip'] ?? '');
+        $stmt = $pdo->prepare("INSERT INTO whitelist (ip) VALUES (:ip)");
+        try {
+            $stmt->execute([':ip' => $ip]);
+            header("Location: ?page=whitelist");
+            exit;
+        } catch (PDOException $e) {
+            $whitelist_error = "Error: " . $e->getMessage();
+        }
+    }
+    if ($action === 'delete_whitelist' && isset($_GET['id'])) {
+        $stmt = $pdo->prepare("DELETE FROM whitelist WHERE id = :id");
+        $stmt->execute([':id' => $_GET['id']]);
+        header("Location: ?page=whitelist");
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -196,6 +219,7 @@ if (isset($_GET['action'])) {
       <a href="?page=dashboard">Dashboard</a>
       <a href="?page=attacks">Attack Attempts</a>
       <a href="?page=users">Users</a>
+      <a href="?page=whitelist">Whitelist</a>
     </nav>
     <div class="main">
       <?php
@@ -204,9 +228,11 @@ if (isset($_GET['action'])) {
           case 'dashboard':
               $attackCount = $pdo->query("SELECT COUNT(*) FROM attacks")->fetchColumn();
               $userCount   = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+              $whitelistCount = $pdo->query("SELECT COUNT(*) FROM whitelist")->fetchColumn();
               echo "<h2>Dashboard</h2>";
               echo "<p>Total Attack Attempts: <strong>$attackCount</strong></p>";
               echo "<p>Total Users: <strong>$userCount</strong></p>";
+              echo "<p>Total Whitelisted IPs: <strong>$whitelistCount</strong></p>";
               break;
           case 'attacks':
               echo "<h2>Attack Attempts</h2>";
@@ -288,6 +314,36 @@ if (isset($_GET['action'])) {
                       echo "<p>User not found.</p>";
                   }
               }
+              break;
+          case 'whitelist':
+              echo "<h2>Whitelist</h2>";
+              echo '<a class="button" href="?page=add_whitelist">Add New IP</a><br><br>';
+              echo '<table>';
+              echo '<tr><th>ID</th><th>IP</th><th>Actions</th></tr>';
+              $stmt = $pdo->query("SELECT * FROM whitelist ORDER BY id ASC");
+              while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                  echo "<tr>";
+                  echo "<td>".$row['id']."</td>";
+                  echo "<td>".$row['ip']."</td>";
+                  echo "<td>
+                        <a class='button' href='?action=delete_whitelist&id=".$row['id']."' onclick='return confirm(\"Delete this IP?\")'>Delete</a>
+                        </td>";
+                  echo "</tr>";
+              }
+              echo '</table>';
+              break;
+          case 'add_whitelist':
+              echo "<h2>Add New IP to Whitelist</h2>";
+              if (isset($whitelist_error)) {
+                  echo "<p style='color:red;'>$whitelist_error</p>";
+              }
+              ?>
+              <form method="post" action="?action=add_whitelist">
+                  <label>IP Address</label>
+                  <input type="text" name="ip" required>
+                  <input type="submit" value="Add IP">
+              </form>
+              <?php
               break;
           default:
               echo "<h2>Dashboard</h2>";

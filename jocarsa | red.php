@@ -9,6 +9,47 @@
  * and terminates execution by displaying a centered closed lock emoji.
  */
 
+// Define the path to the SQLite database (shared with the security log).
+$db_file = __DIR__ . '/attack_log.sqlite';
+
+try {
+    $pdo = new PDO('sqlite:' . $db_file);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
+// Create the whitelist table if not exists.
+$pdo->exec("CREATE TABLE IF NOT EXISTS whitelist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ip TEXT UNIQUE
+)");
+
+// Function to check if IP is in the whitelist.
+function is_whitelisted($pdo, $ip) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM whitelist WHERE ip = :ip");
+    $stmt->execute([':ip' => $ip]);
+    return $stmt->fetchColumn() > 0;
+}
+
+// Function to check if IP is in the blacklist.
+function is_blacklisted($pdo, $ip) {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM attacks WHERE ip = :ip");
+    $stmt->execute([':ip' => $ip]);
+    return $stmt->fetchColumn() > 0;
+}
+
+// Get the current visitor's IP.
+$current_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+// Check if the IP is whitelisted.
+if (!is_whitelisted($pdo, $current_ip)) {
+    // Check if the IP is blacklisted.
+    if (is_blacklisted($pdo, $current_ip)) {
+        die("Access denied. Your IP has been blacklisted.");
+    }
+}
+
 // Expanded regex patterns to detect potential attack vectors.
 $attack_patterns = [
     // XSS-related patterns:
@@ -83,6 +124,7 @@ function scan_data($data) {
  * @param string $value The suspicious value detected.
  */
 function log_attack($source, $value) {
+    global $pdo;
     // Define the path to the SQLite database (adjust as needed)
     $db_file = __DIR__ . '/attack_log.sqlite';
 
