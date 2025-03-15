@@ -17,6 +17,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS attacks (
     ip TEXT,
     source TEXT,
     value TEXT,
+    user_agent TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 )");
 
@@ -237,7 +238,7 @@ if (isset($_GET['action'])) {
           case 'attacks':
               echo "<h2>Attack Attempts</h2>";
               echo '<table>';
-              echo '<tr><th>ID</th><th>IP</th><th>Source</th><th>Value</th><th>Timestamp</th><th>Actions</th></tr>';
+              echo '<tr><th>ID</th><th>IP</th><th>Source</th><th>Value</th><th>User Agent</th><th>Timestamp</th><th>Actions</th></tr>';
               $stmt = $pdo->query("SELECT * FROM attacks ORDER BY timestamp DESC");
               while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                   echo "<tr>";
@@ -245,6 +246,7 @@ if (isset($_GET['action'])) {
                   echo "<td>".$row['ip']."</td>";
                   echo "<td>".$row['source']."</td>";
                   echo "<td><pre>".htmlspecialchars($row['value'])."</pre></td>";
+                  echo "<td>".htmlspecialchars($row['user_agent'])."</td>";
                   echo "<td>".$row['timestamp']."</td>";
                   echo "<td><a class='button' href='?action=delete_attack&id=".$row['id']."' onclick='return confirm(\"Delete this record?\")'>Delete</a></td>";
                   echo "</tr>";
