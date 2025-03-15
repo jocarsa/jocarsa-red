@@ -46,7 +46,7 @@ $current_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 if (!is_whitelisted($pdo, $current_ip)) {
     // Check if the IP is blacklisted.
     if (is_blacklisted($pdo, $current_ip)) {
-        die("Access denied. Your IP has been blacklisted.");
+        block_execution();
     }
 }
 
@@ -156,9 +156,14 @@ function log_attack($source, $value) {
 }
 
 /**
- * Block execution by outputting a centered closed lock emoji.
+ * Block execution by outputting a centered closed lock emoji and a message.
  */
 function block_execution() {
+    // Obfuscate the email address to prevent scraping.
+    $email_part1 = "info";
+    $email_part2 = "jocarsa";
+    $email_part3 = "com";
+
     $html = '<!DOCTYPE html>
 <html>
 <head>
@@ -169,17 +174,54 @@ function block_execution() {
             margin: 0;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             background: #f8f8f8;
+            font-family: Arial, sans-serif;
+        }
+        .lock-container {
+            text-align: center;
         }
         .lock {
             font-size: 10rem;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .contact {
+            font-size: 1rem;
+            color: #555;
+        }
+        .contact a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .contact a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="lock">🔒</div>
+    <div class="lock-container">
+        <div class="lock">🔒</div>
+        <div class="message">Access Denied</div>
+        <div class="contact">
+            If you believe this is a mistake, please contact the administrator at
+            <a href="#" onclick="this.href=\'mailto:\'+atob(\'aW5mb0Bqb2NhcnNhLmNvbQ==\')">
+                <span id="email"></span>
+            </a>.
+        </div>
+    </div>
+    <script>
+        // Assemble the email address using JavaScript to prevent scraping.
+        var part1 = "'.$email_part1.'";
+        var part2 = "'.$email_part2.'";
+        var part3 = "'.$email_part3.'";
+        document.getElementById("email").innerText = part1 + "@" + part2 + "." + part3;
+    </script>
 </body>
 </html>';
     echo $html;
