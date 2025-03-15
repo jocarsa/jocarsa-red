@@ -159,64 +159,9 @@ function log_attack($source, $value) {
 }
 
 /**
- * Generate an image with text using PHP-GD.
- *
- * @param string $text The text to display in the image.
- * @param string $filename The path to save the generated image.
- */
-function generate_text_image($text, $filename) {
-    // Set the content-type header to image/png
-    header('Content-Type: image/png');
-
-    // Create a blank image
-    $width = 600;
-    $height = 100;
-    $image = imagecreatetruecolor($width, $height);
-
-    if (!$image) {
-        error_log("Failed to create image.");
-        return;
-    }
-
-    // Set the background color
-    $background_color = imagecolorallocate($image, 255, 255, 255);
-    imagefilledrectangle($image, 0, 0, $width, $height, $background_color);
-
-    // Set the text color
-    $text_color = imagecolorallocate($image, 0, 0, 0);
-
-    // Set the font path (you may need to adjust this path)
-    $font_path = __DIR__ . '/path/to/your/font.ttf'; // Update this path
-
-    if (!file_exists($font_path)) {
-        error_log("Font file not found: $font_path");
-        return;
-    }
-
-    // Add the text to the image
-    if (!imagettftext($image, 20, 0, 10, 50, $text_color, $font_path, $text)) {
-        error_log("Failed to add text to image.");
-        return;
-    }
-
-    // Save the image to a file
-    if (!imagepng($image, $filename)) {
-        error_log("Failed to save image to file: $filename");
-    }
-
-    // Free up memory
-    imagedestroy($image);
-}
-
-/**
  * Block execution by outputting a centered closed lock emoji and a message.
  */
 function block_execution() {
-    // Generate the image with the Spanish text
-    $image_path = __DIR__ . '/contact_message.png';
-    $spanish_text = "Si cree que esto es un error, comuníquese con el administrador en info@jocarsa.com.";
-    generate_text_image($spanish_text, $image_path);
-
     // Obfuscate the email address to prevent scraping.
     $email_part1 = "info";
     $email_part2 = "jocarsa";
@@ -260,14 +205,6 @@ function block_execution() {
         .contact a:hover {
             text-decoration: underline;
         }
-        .image-container {
-            margin-top: 20px;
-        }
-        .image-container img {
-            border: 1px solid #ddd;
-            padding: 5px;
-            background: #fff;
-        }
     </style>
 </head>
 <body>
@@ -275,9 +212,19 @@ function block_execution() {
         <div class="lock">🔒</div>
         <div class="message">Access Denied</div>
         <div class="contact">
-            <img src="' . $image_path . '" alt="Contact Message">
+            Si cree que esto es un error, comuníquese con el administrador en
+            <a href="#" onclick="this.href=\'mailto:\'+atob(\'aW5mb0Bqb2NhcnNhLmNvbQ==\')">
+                <span id="email"></span>
+            </a>.
         </div>
     </div>
+    <script>
+        // Assemble the email address using JavaScript to prevent scraping.
+        var part1 = "'.$email_part1.'";
+        var part2 = "'.$email_part2.'";
+        var part3 = "'.$email_part3.'";
+        document.getElementById("email").innerText = part1 + "@" + part2 + "." + part3;
+    </script>
 </body>
 </html>';
     echo $html;
