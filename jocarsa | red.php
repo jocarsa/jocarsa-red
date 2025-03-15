@@ -173,6 +173,11 @@ function generate_text_image($text, $filename) {
     $height = 100;
     $image = imagecreatetruecolor($width, $height);
 
+    if (!$image) {
+        error_log("Failed to create image.");
+        return;
+    }
+
     // Set the background color
     $background_color = imagecolorallocate($image, 255, 255, 255);
     imagefilledrectangle($image, 0, 0, $width, $height, $background_color);
@@ -183,11 +188,21 @@ function generate_text_image($text, $filename) {
     // Set the font path (you may need to adjust this path)
     $font_path = __DIR__ . '/path/to/your/font.ttf'; // Update this path
 
+    if (!file_exists($font_path)) {
+        error_log("Font file not found: $font_path");
+        return;
+    }
+
     // Add the text to the image
-    imagettftext($image, 20, 0, 10, 50, $text_color, $font_path, $text);
+    if (!imagettftext($image, 20, 0, 10, 50, $text_color, $font_path, $text)) {
+        error_log("Failed to add text to image.");
+        return;
+    }
 
     // Save the image to a file
-    imagepng($image, $filename);
+    if (!imagepng($image, $filename)) {
+        error_log("Failed to save image to file: $filename");
+    }
 
     // Free up memory
     imagedestroy($image);
