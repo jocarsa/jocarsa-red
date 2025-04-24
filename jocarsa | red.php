@@ -69,7 +69,7 @@ $attack_patterns = [
     '/(\b(and|or)\b\s+\d+\s*=\s*\d+)/i',         // numeric boolean injection
     '/(\'|%27)\s*or\s*(\'|%27)/i',               // OR conditions using quotes
     '/(\bOR\b|\bAND\b)\s+\d+\s*=\s*\d+/i',        // additional numeric injection
-    '/(\-\-|\#|\/\*)/i',                         // SQL comment markers (e.g. --, #, /*)
+
     '/;/',                                      // semicolon to chain SQL queries
     '/\b(select|insert|update|delete)\b.*\b(from|into)\b/i', // SQL clause patterns
     '/(?:\bunion\b\s*\bselect\b)/i',             // UNION SELECT patterns
